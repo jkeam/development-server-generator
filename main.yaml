@@ -1,0 +1,67 @@
+- name: Setup development server
+  hosts: servers
+  remote_user: root
+  tasks:
+    - name: Install packages
+      ansible.builtin.dnf:
+        name:
+          - zsh
+          - bat
+          - neovim
+          - fzf
+          - the_silver_searcher
+          - golang
+          - htop
+          - btop
+          - neofetch
+          - podman
+        state: latest
+      become: yes
+
+    - name: Install asdf
+      git:
+        repo: https://github.com/asdf-vm/asdf.git
+        dest: ~/.asdf
+        depth: 1
+        version: v0.10.2
+
+    - name: Install oh my zsh
+      git:
+        repo: https://github.com/ohmyzsh/ohmyzsh.git
+        dest: ~/.oh-my-zsh
+        depth: 1
+
+    - name: Copy zshrc
+      copy:
+        src: ./zshrc
+        dest: ~/.zshrc
+        mode: 0644
+
+    - name: Install spaceship prompt
+      git:
+        repo: https://github.com/spaceship-prompt/spaceship-prompt.git
+        dest: ~/.oh-my-zsh/custom/themes/spaceship-prompt
+        depth: 1
+
+    - name: Enable spaceship theme
+      file:
+        src: ~/.oh-my-zsh/custom/themes/spaceship-prompt/spaceship.zsh-theme
+        dest: ~/.oh-my-zsh/custom/themes/spaceship.zsh-theme
+        state: link
+
+    - name: Create nvim config dir
+      ansible.builtin.file:
+        path: /root/.config/nvim
+        state: directory
+        mode: '0755'
+
+    - name: Copy nvim config file
+      copy:
+        src: ./vimrc
+        dest: /root/.config/nvim/init.vim
+        mode: 0644
+
+    - name: Install Neovim Plug
+      get_url:
+        url: https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+        dest: /root/.local/share/nvim/site/autoload/plug.vim
