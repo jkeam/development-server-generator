@@ -15,6 +15,7 @@
           - btop
           - neofetch
           - podman
+          - tree
         state: latest
       become: yes
 
@@ -71,3 +72,8 @@
       get_url:
         url: https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
         dest: /root/.local/share/nvim/site/autoload/plug.vim
+
+    - name: Set ZSH as default
+      ansible.builtin.user:
+        name: root
+        shell: /bin/zsh
