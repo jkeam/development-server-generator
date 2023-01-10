@@ -19,6 +19,9 @@
           - wget
           - httpd-tools
           - NetworkManager
+          - haproxy
+          - firewalld
+          - policycoreutils-python-utils
         state: latest
       become: yes
 
@@ -103,13 +106,13 @@
         shell: /bin/zsh
         groups: wheel
         append: yes
-        password: "{{ 'password' | password_hash('sha512') }}"
 
     - name: Upload CRC
       become: yes
       become_user: crcuser
       ansible.builtin.unarchive:
-        src: ./artifacts/crc-linux-amd64.tar.xz
+        remote_src: True
+        src: https://developers.redhat.com/content-gateway/rest/mirror/pub/openshift-v4/clients/crc/latest/crc-linux-amd64.tar.xz
         dest: /home/crcuser
 
     - name: Upload secrets/pull-secret.txt
@@ -136,8 +139,8 @@
       ansible.builtin.file:
         path: /usr/local/bin
         owner: root
-        group: wheel
-        mode: '0774'
+        group: root
+        mode: '0755'
 
     - name: Setting permissions on CRC helper functions
       ansible.builtin.file:
@@ -149,6 +152,53 @@
       ansible.builtin.script: ./artifacts/configure_crc.sh
       become: yes
       become_user: crcuser
+
+    - name: Start libvirtd
+      ansible.builtin.systemd:
+        state: started
+        name: libvirtd
+
+    - name: Start firewalld
+      ansible.builtin.systemd:
+        state: started
+        name: firewalld
+
+    - name: Permit https
+      ansible.posix.firewalld:
+        service: https
+        permanent: yes
+        state: enabled
+
+    - name: Permit http
+      ansible.posix.firewalld:
+        service: http
+        permanent: yes
+        state: enabled
+
+    - name: Permit 6443
+      ansible.posix.firewalld:
+        port: 6443/tcp
+        permanent: yes
+        state: enabled
+
+    - name: Restart firewalld
+      ansible.builtin.systemd:
+        state: restarted
+        daemon_reload: yes
+        name: firewalld
+
+    - name: Fix SE Context
+      community.general.seport:
+        ports: 6443
+        proto: tcp
+        setype:  http_port_t
+        state: present
+
+    - name: Configure HAProxy
+      copy:
+        src: ./artifacts/haproxy.cfg
+        dest: /etc/haproxy
+        mode: 0644
 
     - name: Upload and Install Operator SDK
       ansible.builtin.unarchive:
