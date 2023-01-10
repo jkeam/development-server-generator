@@ -18,38 +18,39 @@
           - tree
           - wget
           - httpd-tools
+          - NetworkManager
         state: latest
       become: yes
 
     - name: Install asdf
       git:
         repo: https://github.com/asdf-vm/asdf.git
-        dest: ~/.asdf
+        dest: /root/.asdf
         depth: 1
         version: v0.10.2
 
     - name: Install oh my zsh
       git:
         repo: https://github.com/ohmyzsh/ohmyzsh.git
-        dest: ~/.oh-my-zsh
+        dest: /root/.oh-my-zsh
         depth: 1
 
     - name: Copy zshrc
       copy:
-        src: ./zshrc
-        dest: ~/.zshrc
+        src: ./artifacts/zshrc
+        dest: /root/.zshrc
         mode: 0644
 
     - name: Install spaceship prompt
       git:
         repo: https://github.com/spaceship-prompt/spaceship-prompt.git
-        dest: ~/.oh-my-zsh/custom/themes/spaceship-prompt
+        dest: /root/.oh-my-zsh/custom/themes/spaceship-prompt
         depth: 1
 
     - name: Enable spaceship theme
       file:
         src: ~/.oh-my-zsh/custom/themes/spaceship-prompt/spaceship.zsh-theme
-        dest: ~/.oh-my-zsh/custom/themes/spaceship.zsh-theme
+        dest: /root/.oh-my-zsh/custom/themes/spaceship.zsh-theme
         state: link
 
     - name: Create nvim config dir
@@ -60,7 +61,7 @@
 
     - name: Copy nvim config file
       copy:
-        src: ./vimrc
+        src: ./artifacts/vimrc
         dest: /root/.config/nvim/init.vim
         mode: 0644
 
@@ -83,13 +84,78 @@
         name: root
         shell: /bin/zsh
 
-    - name: Install Operator SDK
+    - name: Ensure group "wheel" exists
+      ansible.builtin.group:
+        name: wheel
+        state: present
+
+    - name: Allow "wheel" group to have passwordless sudo
+      lineinfile:
+        dest: /etc/sudoers
+        state: present
+        regexp: '^%wheel'
+        line: '%wheel ALL=(ALL) NOPASSWD: ALL'
+        validate: 'visudo -cf %s'
+
+    - name: Create user for CRC
+      ansible.builtin.user:
+        name: crcuser
+        shell: /bin/zsh
+        groups: wheel
+        append: yes
+        password: "{{ 'password' | password_hash('sha512') }}"
+
+    - name: Upload CRC
+      become: yes
+      become_user: crcuser
+      ansible.builtin.unarchive:
+        src: ./artifacts/crc-linux-amd64.tar.xz
+        dest: /home/crcuser
+
+    - name: Upload secrets/pull-secret.txt
+      become: yes
+      become_user: crcuser
+      copy:
+        src: ./secrets/pull-secret.txt
+        dest: /home/crcuser
+        mode: 0644
+
+    - name: Install CRC
+      copy:
+        remote_src: True
+        src: /home/crcuser/crc-linux-2.12.0-amd64/crc
+        dest: /usr/local/bin
+        mode: 0755
+
+    - name: Delete unneeded CRC archive
+      file:
+        state: absent
+        path: /home/crcuser/crc-linux-2.12.0-amd64
+
+    - name: Setting permissions on CRC
+      ansible.builtin.file:
+        path: /usr/local/bin
+        owner: root
+        group: wheel
+        mode: '0774'
+
+    - name: Setting permissions on CRC helper functions
+      ansible.builtin.file:
+        path: /home/crcuser/.crc/bin/crc-admin-helper-linux
+        group: wheel
+        mode: '0774'
+
+    - name: Configure CRC
+      ansible.builtin.script: ./artifacts/configure_crc.sh
+      become: yes
+      become_user: crcuser
+
+    - name: Upload and Install Operator SDK
       ansible.builtin.unarchive:
         remote_src: yes
         src: https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/operator-sdk/4.11.20/operator-sdk-v1.22.0-ocp-linux-x86_64.tar.gz
         dest: /usr/local/bin
         mode: 0755
-
     - name: Install OCP Installer
       ansible.builtin.unarchive:
         remote_src: yes
