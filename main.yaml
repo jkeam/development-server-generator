@@ -16,6 +16,7 @@
           - neofetch
           - podman
           - tree
+          - wget
         state: latest
       become: yes
 
