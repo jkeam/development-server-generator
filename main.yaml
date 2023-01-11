@@ -78,3 +78,29 @@
       ansible.builtin.user:
         name: root
         shell: /bin/zsh
+
+    - name: Install Operator SDK
+      ansible.builtin.unarchive:
+        remote_src: yes
+        src: https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/operator-sdk/4.11.20/operator-sdk-v1.22.0-ocp-linux-x86_64.tar.gz
+        dest: /usr/local/bin
+        mode: 0755
+
+    - name: Install OCP Installer
+      ansible.builtin.unarchive:
+        remote_src: yes
+        src: https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/stable/openshift-install-linux.tar.gz
+        dest: /usr/local/bin
+        mode: 0755
+
+    - name: Install OCP Client
+      ansible.builtin.unarchive:
+        remote_src: yes
+        src: https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/stable/openshift-client-linux.tar.gz
+        dest: /usr/local/bin
+        mode: 0755
+
+    - name: Remove OCP Client Readme
+      ansible.builtin.file:
+        path: /usr/local/bin/README.md
+        state: absent
