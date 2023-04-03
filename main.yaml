@@ -17,6 +17,7 @@
           - podman
           - tree
           - wget
+          - httpd-tools
         state: latest
       become: yes
 
