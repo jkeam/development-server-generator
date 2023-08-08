@@ -1,0 +1,80 @@
+- name: Setup development server
+  hosts: servers
+  remote_user: ec2-user
+  tasks:
+    - name: Install packages
+      ansible.builtin.dnf:
+        name:
+          - zsh
+          - golang
+          - htop
+          - docker
+          - tree
+          - wget
+          - httpd-tools
+        state: latest
+      become: yes
+
+    - name: Install asdf
+      git:
+        repo: https://github.com/asdf-vm/asdf.git
+        dest: ~/.asdf
+        depth: 1
+        version: v0.10.2
+
+    - name: Install oh my zsh
+      git:
+        repo: https://github.com/ohmyzsh/ohmyzsh.git
+        dest: ~/.oh-my-zsh
+        depth: 1
+
+    - name: Copy zshrc
+      copy:
+        src: ./zshrc
+        dest: ~/.zshrc
+        mode: 0644
+
+    - name: Install spaceship prompt
+      git:
+        repo: https://github.com/spaceship-prompt/spaceship-prompt.git
+        dest: ~/.oh-my-zsh/custom/themes/spaceship-prompt
+        depth: 1
+
+    - name: Enable spaceship theme
+      file:
+        src: ~/.oh-my-zsh/custom/themes/spaceship-prompt/spaceship.zsh-theme
+        dest: ~/.oh-my-zsh/custom/themes/spaceship.zsh-theme
+        state: link
+
+    - name: Create nvim config dir
+      ansible.builtin.file:
+        path: ~/.vim
+        state: directory
+        mode: '0755'
+
+    - name: Copy vim config file
+      copy:
+        src: ./vimrc
+        dest: ~/.vimrc
+        mode: 0644
+
+    - name: Create vim plug dir
+      ansible.builtin.file:
+        path: ~/.vim/autoload
+        state: directory
+        mode: '0755'
+
+    - name: Install vim plug
+      get_url:
+        url: https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+        dest: ~/.vim/autoload/plug.vim
+
+    - name: Install vim plugins
+      ansible.builtin.command: vim +'PlugInstall --sync' +qa
+
+    - name: Set ZSH as default
+      become: yes
+      ansible.builtin.user:
+        name: ec2-user
+        shell: /bin/zsh
+
