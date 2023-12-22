@@ -18,6 +18,7 @@
           - tree
           - wget
           - httpd-tools
+          - python3-devel
         state: latest
       become: yes
 
@@ -86,7 +87,7 @@
     - name: Install Operator SDK
       ansible.builtin.unarchive:
         remote_src: yes
-        src: https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/operator-sdk/4.11.20/operator-sdk-v1.22.0-ocp-linux-x86_64.tar.gz
+        src: https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/operator-sdk/latest/operator-sdk-linux-x86_64.tar.gz
         dest: /usr/local/bin
         mode: 0755
 
