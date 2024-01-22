@@ -19,6 +19,8 @@
           - wget
           - httpd-tools
           - python3-devel
+          - awscli2
+          - azure-cli
         state: latest
       become: yes
 
