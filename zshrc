@@ -96,7 +96,7 @@ export HISTTIMEFORMAT='%F %T '
 # export PATH="$(yarn global bin):$PATH"
 
 # fzf
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+[ -f ~/.fzf ] && source ~/.fzf
 
 # sdkman
 # export SDKMAN_DIR="$HOME/.sdkman"
