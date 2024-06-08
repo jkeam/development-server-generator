@@ -93,6 +93,18 @@
         dest: /usr/local/bin
         mode: 0755
 
+    - name: Flatten Operator SDK
+      ansible.builtin.copy:
+        remote_src: yes
+        src: /usr/local/bin/x86_64/operator-sdk
+        dest: /usr/local/bin/operator-sdk
+        mode: 0755
+
+    - name: Delete Extracted Operator SDK Dir
+      ansible.builtin.file:
+        path: /usr/local/bin/x86_64
+        state: absent
+
     - name: Install OCP Installer
       ansible.builtin.unarchive:
         remote_src: yes
