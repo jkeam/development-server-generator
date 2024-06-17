@@ -48,7 +48,7 @@ let g:ale_fixers = {
     \'*': ['remove_trailing_lines', 'trim_whitespace'],
     \'javascript': ['standard', 'eslint'],
     \'rust': ['rustfmt'],
-    \'go': ['gofmt', 'golint', 'go vet'],
+    \'go': ['gofmt', 'gofumpt', 'goimports', 'golines', 'gopls'],
 \}
 
 " set this to your rtp location
